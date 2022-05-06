@@ -1,0 +1,40 @@
+/**
+ * Rinkeby:
+LITxToken deployed to 0x662370b1889bd16817E0f839BFe52Fbc96F80EEe with args [
+  '0xD00Cd5a3719fF58BC0FE193bde53a8a699D7DF11',
+  '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+  '0x6cc47FA91A9703A2355046e6Ea113EEe0B8Eedac',
+  1655487631,
+  [ 4, 97, 80001 ]
+  ]
+  impl: 0x734d7ECB3950d35E758888b37E09Fa69D87B1035
+* Binance Test
+LITxToken deployed to 0x104b17a04cE5a4e2f4eFE4BaC5c051631d882C4c with args [
+  '0xD00Cd5a3719fF58BC0FE193bde53a8a699D7DF11',
+  '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+  '0x7d41151a0B65C514a44aFe6af24bD8Ba0B6216C5',
+  1655623082,
+  [ 4, 97, 80001 ]
+  ]
+  impl: 0x435A5B0f145594f2e83a772057527230BB9F2216
+* Mumbai:
+LITxToken deployed to 0x63A45bA2b0D8605c89035081175EEBff641Ba947 with args [
+  '0xD00Cd5a3719fF58BC0FE193bde53a8a699D7DF11',
+  '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+  '0x1ACf4aD8eB6ac8aF40C500F7A9C81573Aeb11d04',
+  1655559224,
+  [ 4, 97, 80001 ]
+  ]
+  impl: 0x97811832666d55369E5330b98a69bA937117dF9C 
+*/
+async function main() {
+  await hre.run("verify:verify", {
+    address: "0x435A5B0f145594f2e83a772057527230BB9F2216",
+    constructorArguments: [],
+  });
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
