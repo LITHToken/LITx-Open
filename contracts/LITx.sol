@@ -150,8 +150,10 @@ contract LITxToken is
         uint256[] calldata chains_
     ) internal onlyInitializing {
         require(
-            bridge_ != address(0) && migrateToken_ != address(0),
-            "LITX: bad input"
+            bridge_ != address(0) &&
+                ecosystem_ != address(0) &&
+                migrateToken_ != address(0),
+            "LITX: !zero address"
         );
         bridge = bridge_;
         ecosystem = ecosystem_;
@@ -172,7 +174,7 @@ contract LITxToken is
      * @dev Set Fee Distributor.
      */
     function setFeeDistributor(address feeDistributor_) external onlyOwner {
-        require(feeDistributor_ != address(0), "LITX: bad input");
+        require(feeDistributor_ != address(0), "LITX: !zero address");
         feeDistributor = feeDistributor_;
         emit FeeDistributorSet(_msgSender(), feeDistributor_);
     }
@@ -192,6 +194,7 @@ contract LITxToken is
     function bridgeGetOn(uint256 amount, uint256 targetChain)
         external
         canBridge(targetChain)
+        nonBanned(_msgSender())
     {
         uint256 tx_ = _txCounter.current();
         _txCounter.increment();
@@ -208,6 +211,7 @@ contract LITxToken is
         uint256 originChain,
         uint256 tx_
     ) external onlyBridge {
+        require(beneficiary != address(0), "LITX: !zero address");
         bytes32 hash = keccak256(abi.encode(originChain, tx_));
         require(!txs[hash], "LITX: tx replay");
         txs[hash] = true;
@@ -222,7 +226,9 @@ contract LITxToken is
         external
         canMigrate
         nonBanned(_beneficiary)
+        nonBanned(_msgSender())
     {
+        require(_beneficiary != address(0), "LITX: !zero address");
         require(_amount > 0, "LITX: bad input");
         migrateToken.transferFrom(_msgSender(), BURN_ADDRESS, _amount);
         super._transfer(address(this), _beneficiary, _amount);

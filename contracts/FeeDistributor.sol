@@ -76,6 +76,12 @@ contract FeeDistributor is OwnableUpgradeable, MerkleDistributor {
         address ecosystem_,
         address marketing_
     ) internal onlyInitializing {
+        require(
+            token_ != address(0) &&
+                ecosystem_ != address(0) &&
+                marketing_ != address(0),
+            "FD: !zero address"
+        );
         token = IERC20Upgradeable(token_);
         ecosystem = ecosystem_;
         marketing = marketing_;
