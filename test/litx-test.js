@@ -58,6 +58,14 @@ describe("LITxToken", function () {
         litxtoken.connect(bridge).setFeeDistributor(feedistributor.address)
       ).to.be.revertedWith("Ownable: caller is not the owner");
 
+      await expect(
+        litxtoken.connect(bridge).setChain(chains[0], false)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+
+      await expect(litxtoken.setChain(chains[0], true)).to.be.revertedWith(
+        "LITX: !same value"
+      );
+
       expect(await litxtoken.name()).to.equal("LITx Token");
       expect(await litxtoken.symbol()).to.equal("LITx");
       expect(await litxtoken.decimals()).to.equal(18);
@@ -123,14 +131,14 @@ describe("LITxToken", function () {
         await lithtoken.approve(litxtoken.address, amount)
       ).wait();
       expect(rcpt.status).to.equal(1);
-      rcpt = await (await litxtoken.ban(deployer.address)).wait();
+      rcpt = await (await litxtoken.ban(user0.address)).wait();
       expect(rcpt.status).to.equal(1);
 
       await expect(litxtoken.migrate(user0.address, amount)).to.be.revertedWith(
-        "BU: sender banned"
+        "BU: address banned"
       );
 
-      rcpt = await (await litxtoken.unban(deployer.address)).wait();
+      rcpt = await (await litxtoken.unban(user0.address)).wait();
       expect(rcpt.status).to.equal(1);
       rcpt = await (await litxtoken.migrate(user0.address, amount)).wait();
       expect(rcpt.status).to.equal(1);
@@ -154,9 +162,7 @@ describe("LITxToken", function () {
         (amount * (PPM - 1)) / PPM
       );
 
-      await expect(litxtoken.finalize()).to.be.revertedWith(
-        "LITX: too early"
-      );
+      await expect(litxtoken.finalize()).to.be.revertedWith("LITX: too early");
 
       await future(period + 1000);
 
@@ -169,6 +175,10 @@ describe("LITxToken", function () {
       await expect(litxtoken.migrate(user0.address, amount)).to.be.revertedWith(
         "LITX: migration finished"
       );
+
+      rcpt = await (await litxtoken.setChain(137, true)).wait();
+      expect(rcpt.status).to.equal(1);
+      expect(await litxtoken.chains(137)).to.equal(true);
     });
   });
 });

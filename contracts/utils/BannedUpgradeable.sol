@@ -1,17 +1,16 @@
-// SPDX-License-Identifier: AGPLv3"
-
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 
 abstract contract BannedUpgradeable is ContextUpgradeable {
-    mapping (address => bool) public banned;
+    mapping(address => bool) public banned;
 
     event Banned(address);
     event UnBanned(address);
 
-    modifier nonBanned {
-        require(!banned[_msgSender()], "BU: sender banned");
+    modifier nonBanned(address who) {
+        require(!banned[who], "BU: address banned");
         _;
     }
 

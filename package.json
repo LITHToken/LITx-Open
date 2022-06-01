@@ -9,6 +9,10 @@
     "ethers": "^5.4.7",
     "hardhat": "^2.6.4",
     "hardhat-contract-sizer": "^2.1.1",
+    "prettier": "2.3.0",
+    "prettier-plugin-solidity": "1.0.0-beta.10",
+    "solhint": "3.3.4",
+    "solhint-plugin-prettier": "0.0.5",
     "solidity-coverage": "^0.7.17"
   },
   "dependencies": {
@@ -19,6 +23,10 @@
   "scripts": {
     "compile": "hardhat compile",
     "format": "prettier --write .",
+    "format:check": "prettier --check '*/**/*.{js,sol,json,md,ts}'",
+    "lint": "eslint --cache . && yarn lint:sol",
+    "lint:ts": "eslint -c .eslintrc.json --ext \"**/*.ts\" \"**/*.test.ts\"",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
     "deploy": "hardhat run scripts/deploy.js",

@@ -1,21 +1,18 @@
-// SPDX-License-Identifier: AGPLv3"
-
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.10;
 
 import "./utils/BannedUpgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
-
-contract LITxToken is 
+contract LITxToken is
     OwnableUpgradeable,
-    ReentrancyGuardUpgradeable,
     BannedUpgradeable,
-    ERC20PermitUpgradeable {
+    ERC20PermitUpgradeable
+{
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
@@ -23,16 +20,35 @@ contract LITxToken is
     string private constant SYMBOL = "LITx";
     uint256 private constant PPM = 100;
     uint256 private constant TOTAL_SUPPLY = 5_417_770_823e18;
-    address private constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+    address private constant BURN_ADDRESS =
+        0x000000000000000000000000000000000000dEaD;
 
+    /**
+     * @dev Emitted when Fee Distributor address set.
+     */
+    event FeeDistributorSet(address indexed who, address to);
+    /**
+     * @dev Emitted when Chain enabled/disabled.
+     */
+    event ChainSet(address indexed who, uint256 chain, bool enable);
     /*
      * @dev Burn the token on target chain
      */
-    event BridgeGotOn(address indexed sender, uint256 amount, uint256 indexed targetChain, uint256 indexed tx);
+    event BridgeGotOn(
+        address indexed sender,
+        uint256 amount,
+        uint256 indexed targetChain,
+        uint256 indexed tx
+    );
     /*
      * @dev Mint the token on target chain
      */
-    event BridgeGotOff(address indexed beneficiary, uint256 amount, uint256 indexed originChain, uint256 indexed tx);
+    event BridgeGotOff(
+        address indexed beneficiary,
+        uint256 amount,
+        uint256 indexed originChain,
+        uint256 indexed tx
+    );
     /**
      * @dev Emitted when `amount` tokens are moved from the contract to (`to`).
      */
@@ -85,8 +101,17 @@ contract LITxToken is
         address ecosystem_,
         address migrateToken_,
         uint256 migrateBy_,
-        uint256[] memory chains_) public initializer {
-        __LITxToken_init(NAME, SYMBOL, bridge_, ecosystem_, migrateToken_, migrateBy_, chains_);
+        uint256[] calldata chains_
+    ) external initializer {
+        __LITxToken_init(
+            NAME,
+            SYMBOL,
+            bridge_,
+            ecosystem_,
+            migrateToken_,
+            migrateBy_,
+            chains_
+        );
     }
 
     /**
@@ -99,13 +124,19 @@ contract LITxToken is
         address ecosystem_,
         address migrateToken_,
         uint256 migrateBy_,
-        uint256[] memory chains_) internal onlyInitializing {
+        uint256[] calldata chains_
+    ) internal onlyInitializing {
         __Context_init_unchained();
         __Ownable_init_unchained();
-        __ReentrancyGuard_init_unchained();
         __ERC20_init_unchained(name_, symbol_);
         __ERC20Permit_init_unchained(name_);
-        __LITxToken_init_unchained(bridge_, ecosystem_, migrateToken_, migrateBy_, chains_);
+        __LITxToken_init_unchained(
+            bridge_,
+            ecosystem_,
+            migrateToken_,
+            migrateBy_,
+            chains_
+        );
     }
 
     /**
@@ -116,9 +147,12 @@ contract LITxToken is
         address ecosystem_,
         address migrateToken_,
         uint256 migrateBy_,
-        uint256[] memory chains_) internal onlyInitializing {
-        require(bridge_ != address(0) 
-            && migrateToken_ != address(0), "LITX: bad input");
+        uint256[] calldata chains_
+    ) internal onlyInitializing {
+        require(
+            bridge_ != address(0) && migrateToken_ != address(0),
+            "LITX: bad input"
+        );
         bridge = bridge_;
         ecosystem = ecosystem_;
         migrateToken = IERC20Upgradeable(migrateToken_);
@@ -128,24 +162,37 @@ contract LITxToken is
             super._mint(address(this), TOTAL_SUPPLY);
         }
 
-        for (uint256 i = 0; i < chains_.length;) {
+        for (uint256 i = 0; i < chains_.length; ) {
             chains[chains_[i]] = true;
-            unchecked{ i++; }
+            unchecked {i++;}
         }
     }
 
     /**
      * @dev Set Fee Distributor.
      */
-    function setFeeDistributor(address feeDistributor_) external onlyOwner  {
+    function setFeeDistributor(address feeDistributor_) external onlyOwner {
         require(feeDistributor_ != address(0), "LITX: bad input");
         feeDistributor = feeDistributor_;
+        emit FeeDistributorSet(_msgSender(), feeDistributor_);
+    }
+
+    /**
+     * @dev Set./Unset chains
+     */
+    function setChain(uint256 chain_, bool enable_) external onlyOwner {
+        require(chains[chain_] != enable_, "LITX: !same value");
+        chains[chain_] = enable_;
+        emit ChainSet(_msgSender(), chain_, enable_);
     }
 
     /**
      * @dev Go to the bridge.
      */
-    function bridgeGetOn(uint256 amount, uint256 targetChain) external canBridge(targetChain) {
+    function bridgeGetOn(uint256 amount, uint256 targetChain)
+        external
+        canBridge(targetChain)
+    {
         uint256 tx_ = _txCounter.current();
         _txCounter.increment();
         super._burn(msg.sender, amount);
@@ -155,7 +202,12 @@ contract LITxToken is
     /**
      * @dev Get off the bridge.
      */
-    function bridgeGetOff(address beneficiary, uint256 amount, uint256 originChain, uint256 tx_) external onlyBridge {
+    function bridgeGetOff(
+        address beneficiary,
+        uint256 amount,
+        uint256 originChain,
+        uint256 tx_
+    ) external onlyBridge {
         bytes32 hash = keccak256(abi.encode(originChain, tx_));
         require(!txs[hash], "LITX: tx replay");
         txs[hash] = true;
@@ -166,9 +218,13 @@ contract LITxToken is
     /**
      * @dev Migrate LITH to LITx as 1:1.
      */
-    function migrate(address _beneficiary, uint256 _amount) external canMigrate nonBanned nonReentrant {
+    function migrate(address _beneficiary, uint256 _amount)
+        external
+        canMigrate
+        nonBanned(_beneficiary)
+    {
         require(_amount > 0, "LITX: bad input");
-        migrateToken.safeTransferFrom(_msgSender(), BURN_ADDRESS, _amount);
+        migrateToken.transferFrom(_msgSender(), BURN_ADDRESS, _amount);
         super._transfer(address(this), _beneficiary, _amount);
         emit Migrated(_beneficiary, _amount);
     }
@@ -189,15 +245,15 @@ contract LITxToken is
     function ban(address user) external onlyOwner {
         super._ban(user);
     }
-    
+
     /**
      * @dev Unban token transfer from banned caller.
      */
     function unban(address user) external onlyOwner {
         super._unban(user);
     }
-    
-     /**
+
+    /**
      * @dev Moves `amount` of tokens from `sender` to `recipient`.
      *
      * This internal function is equivalent to {transfer}, and can be used to
@@ -215,7 +271,7 @@ contract LITxToken is
         address sender,
         address recipient,
         uint256 amount
-    ) internal override nonBanned {
+    ) internal override nonBanned(sender) nonBanned(recipient) {
         uint256 fee = 0;
         if (sender != feeDistributor && recipient != feeDistributor) {
             fee = amount / PPM;
