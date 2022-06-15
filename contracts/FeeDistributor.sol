@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./utils/MerkleDistributor.sol";
 
 /**
@@ -10,16 +10,10 @@ import "./utils/MerkleDistributor.sol";
  *
  */
 contract FeeDistributor is OwnableUpgradeable, MerkleDistributor {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
-
     /*
      * @dev Claim the reward tokens
      */
     event Claimed(bytes32 merkleRoot, address account, uint256 amount);
-    /*
-     * @dev Set Merkle Root
-     */
-    event MerkleRootChanged(bytes32 merkleRoot);
     /*
      * @dev Reward distributed
      */
@@ -103,7 +97,7 @@ contract FeeDistributor is OwnableUpgradeable, MerkleDistributor {
             amount,
             merkleProof
         );
-        token.transfer(_msgSender(), amount);
+        require(token.transfer(_msgSender(), amount), "!transfer");
         emit Claimed(merkleRoot, _msgSender(), amount);
     }
 
@@ -141,7 +135,7 @@ contract FeeDistributor is OwnableUpgradeable, MerkleDistributor {
         amount /= length;
         require(amount > 0, "FD: !amount");
         for (uint256 i = 0; i < length; ) {
-            token.transfer(developers[i], amount);
+            require(token.transfer(developers[i], amount), "!transfer");
             unchecked {i++;}
         }
     }

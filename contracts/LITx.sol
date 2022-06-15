@@ -5,7 +5,6 @@ import "./utils/BannedUpgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
 contract LITxToken is
@@ -13,7 +12,6 @@ contract LITxToken is
     BannedUpgradeable,
     ERC20PermitUpgradeable
 {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     string private constant NAME = "LITx Token";
@@ -230,7 +228,7 @@ contract LITxToken is
     {
         require(_beneficiary != address(0), "LITX: !zero address");
         require(_amount > 0, "LITX: bad input");
-        migrateToken.transferFrom(_msgSender(), BURN_ADDRESS, _amount);
+        require(migrateToken.transferFrom(_msgSender(), BURN_ADDRESS, _amount), "!transferFrom");
         super._transfer(address(this), _beneficiary, _amount);
         emit Migrated(_beneficiary, _amount);
     }
